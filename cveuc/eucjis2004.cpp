@@ -54,7 +54,7 @@ size_t UcpToWideChar(UCSCHAR ucp, PWCHAR first, PWCHAR second)
 	return ret;
 }
 
-// EUC 1文字分をUnicode Code Pointへ
+// EUC 1文字分をUnicode Code Pointへ変換
 
 size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 {
@@ -68,7 +68,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 	USHORT euc;
 	int i;
 
-	if(srcsize == 0 || ucp1 == NULL || ucp2 == NULL)
+	if(src == NULL || srcsize == 0 || ucp1 == NULL || ucp2 == NULL)
 	{
 		return 0;
 	}
@@ -96,8 +96,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 			ej[0] = src[1] & mask;
 			ej[1] = src[2] & mask;
 
-			if((ej[0] >= ejs && ej[0] <= eje) &&
-			        (ej[1] >= ejs && ej[1] <= eje))
+			if((ej[0] >= ejs && ej[0] <= eje) && (ej[1] >= ejs && ej[1] <= eje))
 			{
 				*ucp1 = 0;
 				if(euc2i[ej[0] - ejs] != 0)
@@ -134,8 +133,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 			ej[0] = src[0] & mask;
 			ej[1] = src[1] & mask;
 
-			if((ej[0] >= ejs && ej[0] <= eje) &&
-			        (ej[1] >= ejs && ej[1] <= eje))
+			if((ej[0] >= ejs && ej[0] <= eje) && (ej[1] >= ejs && ej[1] <= eje))
 			{
 				euc = ((USHORT)ej[0] << 8) | (USHORT)ej[1] | 0x8080;
 
@@ -186,12 +184,7 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 		ss = *srcsize;
 	}
 
-	if(*dstsize == 0)
-	{
-		return FALSE;
-	}
-
-	for(si=0; ; si++)
+	for(si = 0; ; si++)
 	{
 		if((ss <= si) || (*(src + si) == 0x00))
 		{
@@ -207,13 +200,16 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 				*srcsize = si;
 			}
 			*dstsize = di + 1;
-			*(dst + di) = L'\0';
+			if(dst != NULL)
+			{
+				*(dst + di) = L'\0';
+			}
 			return FALSE;
 		}
 		si += i - 1;
 
 		// Unicode Code PointからUTF-16へ変換
-		for(i=0; i<2; i++)
+		for(i = 0; i < 2; i++)
 		{
 			utf16num[i] = 0;
 			if(ucp[i] != 0)
@@ -229,11 +225,14 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 				*srcsize = si;
 			}
 			*dstsize = di + 1;
-			*(dst + di) = L'\0';
+			if(dst != NULL)
+			{
+				*(dst + di) = L'\0';
+			}
 			return FALSE;
 		}
 
-		for(i=0; i<2; i++)
+		for(i = 0; i < 2; i++)
 		{
 			if(dst != NULL)
 			{
@@ -241,7 +240,6 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 			}
 			di += utf16num[i];
 		}
-
 	}
 
 	if(srcsize != NULL)
@@ -249,7 +247,10 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 		*srcsize = si;
 	}
 	*dstsize = di + 1;
-	*(dst + di) = L'\0';
+	if(dst != NULL)
+	{
+		*(dst + di) = L'\0';
+	}
 	return TRUE;
 }
 
@@ -277,12 +278,7 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 		ss = *srcsize;
 	}
 
-	if(*dstsize == 0)
-	{
-		return FALSE;
-	}
-
-	for(si=0; ; si++)
+	for(si = 0; ; si++)
 	{
 		if((ss <= si) || (*(src + si) == 0x0000))
 		{
@@ -291,18 +287,21 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 
 		if(*(src + si) <= 0x007F)	//ASCII
 		{
+			if(*dstsize <= di + 1)	//limit
+			{
+				if(srcsize != NULL)
+				{
+					*srcsize = si;
+				}
+				*dstsize = di + 1;
+				if(dst != NULL)
+				{
+					*(dst + di) = 0;
+				}
+				return FALSE;
+			}
 			if(dst != NULL)
 			{
-				if(*dstsize <= di + 1)	//limit
-				{
-					if(srcsize != NULL)
-					{
-						*srcsize = si;
-					}
-					*dstsize = di + 1;
-					*(dst + di) = 0;
-					return FALSE;
-				}
 				*(dst + di) = (CHAR)*(src + si);
 			}
 			++di;
@@ -334,7 +333,7 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 			}
 
 			//結合文字
-			for(i=0; i<CMBCHARNUM; i++)
+			for(i = 0; i < CMBCHARNUM; i++)
 			{
 				if(first == euccmb[i].ucp[0] && second == euccmb[i].ucp[1])
 				{
@@ -345,7 +344,10 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 							*srcsize = si;
 						}
 						*dstsize = di + 1;
-						*(dst + di) = 0;
+						if(dst != NULL)
+						{
+							*(dst + di) = 0;
+						}
 						return FALSE;
 					}
 					if(dst != NULL)
@@ -362,9 +364,9 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 
 			if(!exist)
 			{
-				for(i=0; i<ROWNUM; i++)
+				for(i = 0; i < ROWNUM; i++)
 				{
-					for(j=0; j<CELLNUM; j++)
+					for(j = 0; j < CELLNUM; j++)
 					{
 						if(ucp == euc1[i][j])		// JIS X 0213 Plane 1
 						{
@@ -375,7 +377,10 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 									*srcsize = si;
 								}
 								*dstsize = di + 1;
-								*(dst + di) = 0;
+								if(dst != NULL)
+								{
+									*(dst + di) = 0;
+								}
 								return FALSE;
 							}
 							if(dst != NULL)
@@ -400,7 +405,10 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 									*srcsize = si;
 								}
 								*dstsize = di + 1;
-								*(dst + di) = 0;
+								if(dst != NULL)
+								{
+									*(dst + di) = 0;
+								}
 								return FALSE;
 							}
 							if(dst != NULL)
@@ -428,7 +436,7 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 
 			if(!exist)
 			{
-				for(i=0; i<ANKNUM; i++)
+				for(i = 0; i < ANKNUM; i++)
 				{
 					if(ucp == eucK[i])	//JIS X 0201 halfwidth katakana
 					{
@@ -439,7 +447,10 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 								*srcsize = si;
 							}
 							*dstsize = di + 1;
-							*(dst + di) = 0;
+							if(dst != NULL)
+							{
+								*(dst + di) = 0;
+							}
 							return FALSE;
 						}
 						if(dst != NULL)
@@ -461,7 +472,10 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 					*srcsize = si;
 				}
 				*dstsize = di + 1;
-				*(dst + di) = 0;
+				if(dst != NULL)
+				{
+					*(dst + di) = 0;
+				}
 				return FALSE;
 			}
 		}
@@ -472,6 +486,9 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 		*srcsize = si;
 	}
 	*dstsize = di + 1;
-	*(dst + di) = 0;
+	if(dst != NULL)
+	{
+		*(dst + di) = 0;
+	}
 	return TRUE;
 }

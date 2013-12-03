@@ -1,7 +1,7 @@
 ﻿
 #include "eucjis2004.h"
 
-#define VERSION		L"1.0.0"
+#define VERSION		L"1.1.0"
 
 #define BUFSIZE 0x8000
 
