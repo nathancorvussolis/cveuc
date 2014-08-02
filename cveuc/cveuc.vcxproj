@@ -81,6 +81,7 @@
     <ClInclude Include="eucjis2004.h" />
     <ClInclude Include="eucjis2004table.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="utf8.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cveuc.cpp" />
@@ -90,6 +91,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="utf8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\README.TXT" />

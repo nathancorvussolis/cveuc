@@ -1,54 +1,77 @@
 ﻿
 -------------------------------------------------------------------------------
 
-   cveuc 1.2.0
+   cveuc 2.0.0
 
 -------------------------------------------------------------------------------
 
 文字コード変換コマンドラインプログラムです。
-EUC-JIS-2004(改行LF)、UTF-16(LE、BOMあり、改行CR+LF)、UTF-8(BOMなし、改行LF) を
-相互に変換します。
+EUC-JIS-2004、UTF-16、UTF-8 を相互に変換します。
 
 変換テーブルは cygwin の iconv 1.14 と同等としています。
 
 実行方法
 
-   cveuc.exe [-uUW] <input file> <output file>
+   cveuc.exe [-euwEUW] <input file> <output file>
 
 オプション
 
-   -u : 入力ファイル UTF-8
-   -U : 出力ファイル UTF-8
-   -W : 出力ファイル UTF-16
+   入力ファイル文字コード指定
+
+      -e : EUC-JIS-2004 (改行LF) (デフォルト)
+      -u : UTF-8 (BOMなしまたはBOMあり、改行CR+LFまたはLF)
+      -w : UTF-16 (LE、BOMなしまたはBOMあり、改行CR+LFまたはLF)
+
+   出力ファイル文字コード指定
+
+      -E : EUC-JIS-2004 (改行LF)
+      -U : UTF-8 (BOMなし、改行LF)
+      -W : UTF-16 (LE、BOMあり、改行CR+LF) (デフォルト)
 
 使用例
 
- 1) EUC-JIS-2004 → UTF-16
-   cveuc.exe euc.txt utf16.txt
+ 1) EUC-JIS-2004 → EUC-JIS-2004
 
- 2) EUC-JIS-2004 → UTF-16
-   cveuc.exe -W euc.txt utf16.txt
+   cveuc.exe -E euc.txt euc_2.txt
+   cveuc.exe -e -E euc.txt euc_2.txt
 
- 3) EUC-JIS-2004 → UTF-8
+ 2) EUC-JIS-2004 → UTF-8
+
    cveuc.exe -U euc.txt utf8.txt
+   cveuc.exe -e -U euc.txt utf8.txt
+
+ 3) EUC-JIS-2004 → UTF-16
+
+   cveuc.exe euc.txt utf16.txt
+   cveuc.exe -e euc.txt utf16.txt
+   cveuc.exe -W euc.txt utf16.txt
+   cveuc.exe -e -W euc.txt utf16.txt
 
  4) UTF-16 → EUC-JIS-2004
-   cveuc.exe utf16.txt euc.txt
+
+   cveuc.exe -w -E utf16.txt euc.txt
 
  5) UTF-16 → UTF-8
-   cveuc.exe -U utf16.txt utf8.txt
 
- 6) UTF-8 → EUC-JIS-2004
-   cveuc.exe -u utf8.txt euc.txt
+   cveuc.exe -w -U utf16.txt utf8.txt
 
- 7) UTF-8 → UTF-16
-   cveuc.exe -u -W utf8.txt utf16.txt
+ 6) UTF-16 → UTF-16
 
- 8) UTF-16 → UTF-16 (単なるコピーと同じ)
-   cveuc.exe -W utf16.txt utf16_2.txt
+   cveuc.exe -w utf16.txt utf16_2.txt
+   cveuc.exe -w -W utf16.txt utf16_2.txt
 
- 9) UTF-8 → UTF-8 (単なるコピーと同じ)
+ 7) UTF-8 → EUC-JIS-2004
+
+   cveuc.exe -u -E utf8.txt euc.txt
+
+ 8) UTF-8 → UTF-8
+
    cveuc.exe -u -U utf8.txt utf8_2.txt
+
+ 9) UTF-8 → UTF-16
+
+   cveuc.exe -u utf8.txt utf16.txt
+   cveuc.exe -u -W utf8.txt utf16.txt
 
 
 
