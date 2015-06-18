@@ -2,12 +2,10 @@
 #include "eucjis2004.h"
 #include "utf8.h"
 
-#define VERSION			L"2.0.1"
+#define VERSION			L"2.1.0"
 
 #define BUFSIZE			0x800
 
-#define RccsUTF8		L"r,ccs=UTF-8"
-#define WccsUTF8		L"w,ccs=UTF-8"
 #define RccsUTF16LE		L"r,ccs=UTF-16LE"
 #define WccsUTF16LE		L"w,ccs=UTF-16LE"
 #define RB				L"rb"
@@ -31,7 +29,7 @@ void print_usage(void)
 	fwprintf(stderr, L"usage : cveuc [option] <input file> <output file>\n"
 		L"   option :\n"
 		L"      input file encoding :\n"
-		L"         -e   EUC-JIS-2004 (LF) (default)\n"
+		L"         -e   EUC-JIS-2004 (LF or CR+LF) (default)\n"
 		L"         -u   UTF-8 (with or without BOM, LF or CR+LF)\n"
 		L"         -w   UTF-16 (LE, with or without BOM, LF or CR+LF)\n"
 		L"      output file encoding :\n"
@@ -50,14 +48,13 @@ int wmain(int argc, wchar_t* argv[])
 	LPWSTR pwb;
 	std::string sbuf;
 	std::wstring wsbuf;
-	size_t ds;
 	BOOL ret;
 	UINT line;
 	LPCWSTR rflag = RB, wflag = WccsUTF16LE;
 	int ai, inenc = in_euc, outenc = out_utf16;
 	LPCWSTR infile, outfile;
 
-	_wsetlocale(LC_ALL, L"JPN");
+	setlocale(LC_ALL, "");
 
 	if(argc < 3)
 	{
@@ -73,7 +70,7 @@ int wmain(int argc, wchar_t* argv[])
 		else if(wcscmp(argv[ai], L"-u") == 0)
 		{
 			inenc = in_utf8;
-			rflag = RccsUTF8;
+			rflag = RB;
 		}
 		else if(wcscmp(argv[ai], L"-w") == 0)
 		{
@@ -127,7 +124,7 @@ int wmain(int argc, wchar_t* argv[])
 		return -1;
 	}
 
-	if(inenc == in_utf8 || inenc == in_utf16)
+	if(inenc == in_utf16)
 	{
 		for(line = 1; ; line++)
 		{
@@ -154,12 +151,14 @@ int wmain(int argc, wchar_t* argv[])
 			switch(outenc)
 			{
 			case out_euc:
-				ds = -1;
-				ret = WideCharToEucJis2004(wsbuf.c_str(), NULL, NULL, &ds);
-				if(ds > 0)
+				sbuf = wstring_to_eucjis2004_string(wsbuf);
+				if(sbuf.size() > 0)
 				{
-					sbuf = wstring_to_eucjis2004_string(wsbuf);
 					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+				}
+				else
+				{
+					ret = FALSE;
 				}
 				break;
 			case out_utf16:
@@ -167,7 +166,14 @@ int wmain(int argc, wchar_t* argv[])
 				break;
 			case out_utf8:
 				sbuf = wstring_to_utf8_string(wsbuf);
-				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+				if(sbuf.size() > 0)
+				{
+					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+				}
+				else
+				{
+					ret = FALSE;
+				}
 				break;
 			default:
 				break;
@@ -205,32 +211,103 @@ int wmain(int argc, wchar_t* argv[])
 				break;
 			}
 
+			if(inenc == in_utf8 && sbuf.size() >= 3 && sbuf.substr(0, 3) == "\xEF\xBB\xBF")
+			{
+				sbuf.erase(0, 3);
+			}
+
+			if(sbuf.size() >= 2 && sbuf.substr(sbuf.size() - 2) == "\r\n")
+			{
+				sbuf.erase(sbuf.size() - 2);
+				sbuf.push_back('\n');
+			}
+
 			ret = TRUE;
 
-			switch(outenc)
+			switch(inenc)
 			{
-			case out_euc:
-				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
-				break;
-			case out_utf16:
-				ds = -1;
-				ret = EucJis2004ToWideChar(sbuf.c_str(), NULL, NULL, &ds);
-				if(ds > 0)
+			case in_euc:
+				switch(outenc)
 				{
-					wsbuf = eucjis2004_string_to_wstring(sbuf);
-					fwprintf(fpo, L"%s", wsbuf.c_str());
-				}
-				break;
-			case out_utf8:
-				ds = -1;
-				ret = EucJis2004ToWideChar(sbuf.c_str(), NULL, NULL, &ds);
-				if(ds > 0)
-				{
-					wsbuf = eucjis2004_string_to_wstring(sbuf);
-					sbuf = wstring_to_utf8_string(wsbuf);
+				case out_euc:
 					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					break;
+				case in_utf8:
+					wsbuf = eucjis2004_string_to_wstring(sbuf);
+					if(wsbuf.size() > 0)
+					{
+						sbuf = wstring_to_utf8_string(wsbuf);
+						if(sbuf.size() > 0)
+						{
+							fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+						}
+						else
+						{
+							ret = FALSE;
+						}
+					}
+					else
+					{
+						ret = FALSE;
+					}
+					break;
+				case out_utf16:
+					wsbuf = eucjis2004_string_to_wstring(sbuf);
+					if(wsbuf.size() > 0)
+					{
+						fwprintf(fpo, L"%s", wsbuf.c_str());
+					}
+					else
+					{
+						ret = FALSE;
+					}
+					break;
+				default:
+					break;
 				}
 				break;
+
+			case in_utf8:
+				switch(outenc)
+				{
+				case out_euc:
+					wsbuf = utf8_string_to_wstring(sbuf);
+					if(wsbuf.size() > 0)
+					{
+						sbuf = wstring_to_eucjis2004_string(wsbuf);
+						if(sbuf.size() > 0)
+						{
+							fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+						}
+						else
+						{
+							ret = FALSE;
+						}
+					}
+					else
+					{
+						ret = FALSE;
+					}
+					break;
+				case in_utf8:
+					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					break;
+				case out_utf16:
+					wsbuf = utf8_string_to_wstring(sbuf);
+					if(wsbuf.size() > 0)
+					{
+						fwprintf(fpo, L"%s", wsbuf.c_str());
+					}
+					else
+					{
+						ret = FALSE;
+					}
+					break;
+				default:
+					break;
+				}
+				break;
+
 			default:
 				break;
 			}

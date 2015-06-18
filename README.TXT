@@ -1,7 +1,7 @@
 ﻿
 -------------------------------------------------------------------------------
 
-   cveuc 2.0.1
+   cveuc 2.1.0
 
 -------------------------------------------------------------------------------
 
@@ -18,9 +18,9 @@ EUC-JIS-2004、UTF-16、UTF-8 を相互に変換します。
 
    入力ファイル文字コード指定
 
-      -e : EUC-JIS-2004 (改行LF) (デフォルト)
-      -u : UTF-8 (BOMなしまたはBOMあり、改行CR+LFまたはLF)
-      -w : UTF-16 (LE、BOMなしまたはBOMあり、改行CR+LFまたはLF)
+      -e : EUC-JIS-2004 (改行LFまたはCR+LF) (デフォルト)
+      -u : UTF-8 (BOMなしまたはBOMあり、改行LFまたはCR+LF)
+      -w : UTF-16 (LE、BOMなしまたはBOMあり、改行LFまたはCR+LF)
 
    出力ファイル文字コード指定
 
@@ -85,7 +85,7 @@ cveuc
 
 The MIT License
 
-Copyright (c) 2012-2014 SASAKI Nobuyuki
+Copyright (C) 2012-2015 SASAKI Nobuyuki
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
