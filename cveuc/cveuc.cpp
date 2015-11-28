@@ -2,7 +2,7 @@
 #include "eucjis2004.h"
 #include "utf8.h"
 
-#define VERSION			L"2.1.0"
+#define VERSION			L"2.1.1"
 
 #define BUFSIZE			0x800
 
