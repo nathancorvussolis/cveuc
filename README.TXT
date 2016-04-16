@@ -1,13 +1,12 @@
 ﻿
 -------------------------------------------------------------------------------
 
-   cveuc 2.1.1
+   cveuc 2.2.0
 
 -------------------------------------------------------------------------------
 
 文字コード変換コマンドラインプログラムです。
 EUC-JIS-2004、UTF-16、UTF-8 を相互に変換します。
-
 変換テーブルは cygwin の iconv 1.14 と同等としています。
 
 実行方法
@@ -85,7 +84,7 @@ cveuc
 
 The MIT License
 
-Copyright (C) 2012-2015 SASAKI Nobuyuki
+Copyright (C) 2012-2016 SASAKI Nobuyuki
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),

@@ -2,7 +2,7 @@
 #include "eucjis2004.h"
 #include "utf8.h"
 
-#define VERSION			L"2.1.1"
+#define VERSION			L"2.2.0"
 
 #define BUFSIZE			0x800
 
@@ -111,13 +111,13 @@ int wmain(int argc, wchar_t* argv[])
 	outfile = argv[ai + 1];
 
 	_wfopen_s(&fpi, infile, rflag);
-	if(fpi == NULL)
+	if(fpi == nullptr)
 	{
 		fwprintf(stderr, L"error : cannot open %s\n", infile);
 		return -1;
 	}
 	_wfopen_s(&fpo, outfile, wflag);
-	if(fpo == NULL)
+	if(fpo == nullptr)
 	{
 		fwprintf(stderr, L"error : cannot open %s\n", outfile);
 		fclose(fpi);
@@ -131,7 +131,7 @@ int wmain(int argc, wchar_t* argv[])
 			sbuf.clear();
 			wsbuf.clear();
 
-			while((pwb = fgetws(wbuf, _countof(wbuf), fpi)) != NULL)
+			while((pwb = fgetws(wbuf, _countof(wbuf), fpi)) != nullptr)
 			{
 				wsbuf.append(wbuf);
 
@@ -141,7 +141,7 @@ int wmain(int argc, wchar_t* argv[])
 				}
 			}
 
-			if(pwb == NULL)
+			if(pwb == nullptr)
 			{
 				break;
 			}
@@ -196,7 +196,7 @@ int wmain(int argc, wchar_t* argv[])
 			sbuf.clear();
 			wsbuf.clear();
 
-			while((pb = fgets(buf, _countof(buf), fpi)) != NULL)
+			while((pb = fgets(buf, _countof(buf), fpi)) != nullptr)
 			{
 				sbuf.append(buf);
 
@@ -206,7 +206,7 @@ int wmain(int argc, wchar_t* argv[])
 				}
 			}
 
-			if(pb == NULL)
+			if(pb == nullptr)
 			{
 				break;
 			}
