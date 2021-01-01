@@ -1,22 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cveuc", "cveuc\cveuc.vcxproj", "{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Debug|Win32.Build.0 = Debug|Win32
+		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Debug|x64.ActiveCfg = Debug|Win32
 		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Release|Win32.ActiveCfg = Release|Win32
 		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Release|Win32.Build.0 = Release|Win32
+		{7FA967ED-EB8B-4880-A43E-BEFFF8076BD1}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4B443897-D7F3-4E21-83B2-1AB5A9855B20}
 	EndGlobalSection
 EndGlobal
