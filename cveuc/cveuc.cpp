@@ -1,24 +1,30 @@
 ﻿
 #include "eucjis2004.h"
+#include "eucjp.h"
 #include "utf8.h"
 
-#define VERSION			L"2.4.0"
+#define VERSION			L"2.5.0"
 
-#define BUFSIZE			0x800
+#define BUFSIZE			0x200
 
-#define RccsUTF16LE		L"r,ccs=UTF-16LE"
-#define WccsUTF16LE		L"w,ccs=UTF-16LE"
-#define RB				L"rb"
-#define WB				L"wb"
+LPCWSTR modeRccsUTF16LE = L"rt,ccs=UTF-16LE";
+LPCWSTR modeWccsUTF16LE = L"wt,ccs=UTF-16LE";
+LPCWSTR modeRccsUTF8 = L"rt,ccs=UTF-8";
+LPCWSTR modeRT = L"rt";
+LPCWSTR modeWB = L"wb";
 
 enum enum_inenc {
-	in_euc,
+	in_enc_none,
+	in_euc_jis_2004,
+	in_euc_jp,
 	in_utf16,
 	in_utf8
 };
 
 enum enum_outenc {
-	out_euc,
+	out_enc_none,
+	out_euc_jis_2004,
+	out_euc_jp,
 	out_utf16,
 	out_utf8
 };
@@ -26,135 +32,293 @@ enum enum_outenc {
 void print_usage(void)
 {
 	fwprintf(stderr, L"\ncveuc %s\n\n", VERSION);
-	fwprintf(stderr, L"usage : cveuc [option] <input file> <output file>\n"
-		L"   option :\n"
-		L"      input file encoding :\n"
-		L"         -e   EUC-JIS-2004 (LF or CR+LF) (default)\n"
-		L"         -u   UTF-8 (with or without BOM, LF or CR+LF)\n"
-		L"         -w   UTF-16 (LE, with or without BOM, LF or CR+LF)\n"
-		L"      output file encoding :\n"
-		L"         -E   EUC-JIS-2004 (LF)\n"
-		L"         -U   UTF-8 (without BOM, LF)\n"
-		L"         -W   UTF-16 (LE, with BOM, CR+LF) (default)\n"
+	fwprintf(stderr, L"usage : cveuc [-ejuw] [-EJUW] <input file name> <output file name>\n"
+		L"  option :\n"
+		L"    input file encoding :\n"
+		L"      -e  EUC-JIS-2004 (LF or CR+LF)\n"
+		L"      -j  EUC-JP (LF or CR+LF)\n"
+		L"      -u  UTF-8 (with or without BOM, LF or CR+LF)\n"
+		L"      -w  UTF-16 (LE, with or without BOM, LF or CR+LF)\n"
+		L"    output file encoding :\n"
+		L"      -E  EUC-JIS-2004 (LF)\n"
+		L"      -J  EUC-JP (LF)\n"
+		L"      -U  UTF-8 (without BOM, LF)\n"
+		L"      -W  UTF-16 (LE, with BOM, CR+LF)\n"
 		);
 }
 
-int wmain(int argc, wchar_t* argv[])
+BOOL encode_from_unicode(FILE *fpi, enum_inenc inenc, FILE *fpo, enum_outenc outenc);
+BOOL encode_from_euc(FILE *fpi, enum_inenc inenc, FILE *fpo, enum_outenc outenc);
+
+int wmain(int argc, wchar_t *argv[])
 {
-	FILE *fpi, *fpo;
-	CHAR buf[BUFSIZE * sizeof(WCHAR)];
-	LPSTR pb;
-	WCHAR wbuf[BUFSIZE];
-	LPWSTR pwb;
-	std::string sbuf;
-	std::wstring wsbuf;
-	BOOL ret;
-	UINT line;
-	LPCWSTR rflag = RB, wflag = WccsUTF16LE;
-	int ai, inenc = in_euc, outenc = out_utf16;
-	LPCWSTR infile, outfile;
+	BOOL ret = TRUE;
+	enum_inenc inenc = in_enc_none;
+	enum_outenc outenc = out_enc_none;
+	LPCWSTR rmode = modeRT;
+	LPCWSTR wmode = modeWB;
 
 	setlocale(LC_ALL, "");
 
-	if(argc < 3)
+	if (argc < 5)
 	{
 		print_usage();
 		return -1;
 	}
 
-	for(ai = 1; ai < 3; ai++)
+	LPCWSTR inopt = argv[1];
+	if (wcscmp(inopt, L"-e") == 0)
 	{
-		if(wcscmp(argv[ai], L"-e") == 0)
-		{
-		}
-		else if(wcscmp(argv[ai], L"-u") == 0)
-		{
-			inenc = in_utf8;
-			rflag = RB;
-		}
-		else if(wcscmp(argv[ai], L"-w") == 0)
-		{
-			inenc = in_utf16;
-			rflag = RccsUTF16LE;
-		}
-		else if(wcscmp(argv[ai], L"-E") == 0)
-		{
-			outenc = out_euc;
-			wflag = WB;
-		}
-		else if(wcscmp(argv[ai], L"-U") == 0)
-		{
-			outenc = out_utf8;
-			wflag = WB;
-		}
-		else if(wcscmp(argv[ai], L"-W") == 0)
-		{
-		}
-		else
-		{
-			if(argv[ai][0] == L'-')
-			{
-				print_usage();
-				return -1;
-			}
-			break;
-		}
+		inenc = in_euc_jis_2004;
+		rmode = modeRT;
 	}
-
-	if(argc < ai + 2)
+	else if (wcscmp(inopt, L"-j") == 0)
+	{
+		inenc = in_euc_jp;
+		rmode = modeRT;
+	}
+	else if (wcscmp(inopt, L"-u") == 0)
+	{
+		inenc = in_utf8;
+		rmode = modeRccsUTF8;
+	}
+	else if (wcscmp(inopt, L"-w") == 0)
+	{
+		inenc = in_utf16;
+		rmode = modeRccsUTF16LE;
+	}
+	else
 	{
 		print_usage();
 		return -1;
 	}
 
-	infile = argv[ai];
-	outfile = argv[ai + 1];
+	LPCWSTR outopt = argv[2];
+	if (wcscmp(outopt, L"-E") == 0)
+	{
+		outenc = out_euc_jis_2004;
+		wmode = modeWB;
+	}
+	else if (wcscmp(outopt, L"-J") == 0)
+	{
+		outenc = out_euc_jp;
+		wmode = modeWB;
+	}
+	else if (wcscmp(outopt, L"-U") == 0)
+	{
+		outenc = out_utf8;
+		wmode = modeWB;
+	}
+	else if (wcscmp(outopt, L"-W") == 0)
+	{
+		outenc = out_utf16;
+		wmode = modeWccsUTF16LE;
+	}
+	else
+	{
+		print_usage();
+		return -1;
+	}
 
-	_wfopen_s(&fpi, infile, rflag);
-	if(fpi == nullptr)
+	LPCWSTR infile = argv[3];
+	FILE *fpi = nullptr;
+	_wfopen_s(&fpi, infile, rmode);
+	if (fpi == nullptr)
 	{
 		fwprintf(stderr, L"error : cannot open %s\n", infile);
 		return -1;
 	}
-	_wfopen_s(&fpo, outfile, wflag);
-	if(fpo == nullptr)
+
+	LPCWSTR outfile = argv[4];
+	FILE *fpo = nullptr;
+	_wfopen_s(&fpo, outfile, wmode);
+	if (fpo == nullptr)
 	{
 		fwprintf(stderr, L"error : cannot open %s\n", outfile);
 		fclose(fpi);
 		return -1;
 	}
 
-	if(inenc == in_utf16)
+	switch (inenc)
 	{
-		for(line = 1; ; line++)
+	case in_utf16:
+	case in_utf8:
+		ret = encode_from_unicode(fpi, inenc, fpo, outenc);
+		break;
+	case in_euc_jis_2004:
+	case in_euc_jp:
+		ret = encode_from_euc(fpi, inenc, fpo, outenc);
+		break;
+	default:
+		break;
+	}
+
+	fclose(fpi);
+	fclose(fpo);
+
+	return (ret == TRUE ? 0 : -1);
+}
+
+BOOL encode_from_unicode(FILE *fpi, enum_inenc inenc, FILE *fpo, enum_outenc outenc)
+{
+	BOOL ret = TRUE;
+	WCHAR wbuf[BUFSIZE / sizeof(WCHAR)];
+	std::string sbuf;
+	std::wstring wsbuf;
+
+	for (UINT line = 1; ; line++)
+	{
+		sbuf.clear();
+		wsbuf.clear();
+
+		while (fgetws(wbuf, _countof(wbuf), fpi) != nullptr)
 		{
-			sbuf.clear();
-			wsbuf.clear();
+			wsbuf.append(wbuf);
 
-			while((pwb = fgetws(wbuf, _countof(wbuf), fpi)) != nullptr)
-			{
-				wsbuf.append(wbuf);
-
-				if(!wsbuf.empty() && wsbuf.back() == L'\n')
-				{
-					break;
-				}
-			}
-
-			if(pwb == nullptr)
+			if (!wsbuf.empty() && wsbuf.back() == L'\n')
 			{
 				break;
 			}
+		}
 
-			ret = TRUE;
+		if (ferror(fpi) != 0)
+		{
+			ret = FALSE;
+			fwprintf(stderr, L"error : file read line %u\n", line);
+			break;
+		}
 
-			switch(outenc)
+		if (wsbuf.empty())
+		{
+			break;
+		}
+
+		switch (outenc)
+		{
+		case out_euc_jis_2004:
+			sbuf = wstring_to_eucjis2004_string(wsbuf);
+			if (sbuf.size() > 0)
 			{
-			case out_euc:
-				sbuf = wstring_to_eucjis2004_string(wsbuf);
-				if(sbuf.size() > 0)
+				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+			}
+			else
+			{
+				ret = FALSE;
+			}
+			break;
+		case out_euc_jp:
+			sbuf = wstring_to_eucjp_string(wsbuf);
+			if (sbuf.size() > 0)
+			{
+				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+			}
+			else
+			{
+				ret = FALSE;
+			}
+			break;
+		case out_utf16:
+			fwprintf(fpo, L"%s", wsbuf.c_str());
+			break;
+		case out_utf8:
+			sbuf = wstring_to_utf8_string(wsbuf);
+			if (sbuf.size() > 0)
+			{
+				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+			}
+			else
+			{
+				ret = FALSE;
+			}
+			break;
+		default:
+			break;
+		}
+
+		if (!ret)
+		{
+			fwprintf(stderr, L"error : cannot convert line %u\n", line);
+			break;
+		}
+	}
+
+	return ret;
+}
+
+BOOL encode_from_euc(FILE *fpi, enum_inenc inenc, FILE *fpo, enum_outenc outenc)
+{
+	BOOL ret = TRUE;
+	CHAR buf[BUFSIZE];
+	std::string sbuf;
+	std::wstring wsbuf;
+
+	for (UINT line = 1; ; line++)
+	{
+		sbuf.clear();
+		wsbuf.clear();
+
+		while (fgets(buf, _countof(buf), fpi) != nullptr)
+		{
+			sbuf.append(buf);
+
+			if (!sbuf.empty() && sbuf.back() == '\n')
+			{
+				break;
+			}
+		}
+
+		if (ferror(fpi) != 0)
+		{
+			ret = FALSE;
+			fwprintf(stderr, L"error : file read line %u\n", line);
+			break;
+		}
+
+		if (sbuf.empty())
+		{
+			break;
+		}
+
+		switch (inenc)
+		{
+		case in_euc_jis_2004:
+			switch (outenc)
+			{
+			case out_euc_jis_2004:
+				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+				break;
+			case out_euc_jp:
+				wsbuf = eucjis2004_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
 				{
-					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					sbuf = wstring_to_eucjp_string(wsbuf);
+					if (sbuf.size() > 0)
+					{
+						fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					}
+					else
+					{
+						ret = FALSE;
+					}
+				}
+				else
+				{
+					ret = FALSE;
+				}
+				break;
+			case out_utf8:
+				wsbuf = eucjis2004_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
+				{
+					sbuf = wstring_to_utf8_string(wsbuf);
+					if (sbuf.size() > 0)
+					{
+						fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					}
+					else
+					{
+						ret = FALSE;
+					}
 				}
 				else
 				{
@@ -162,13 +326,10 @@ int wmain(int argc, wchar_t* argv[])
 				}
 				break;
 			case out_utf16:
-				fwprintf(fpo, L"%s", wsbuf.c_str());
-				break;
-			case out_utf8:
-				sbuf = wstring_to_utf8_string(wsbuf);
-				if(sbuf.size() > 0)
+				wsbuf = eucjis2004_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
 				{
-					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					fwprintf(fpo, L"%s", wsbuf.c_str());
 				}
 				else
 				{
@@ -176,152 +337,82 @@ int wmain(int argc, wchar_t* argv[])
 				}
 				break;
 			default:
+				ret = FALSE;
 				break;
 			}
+			break;
 
-			if(!ret)
+		case in_euc_jp:
+			switch (outenc)
 			{
-				fwprintf(stderr, L"error : cannot convert line %u\n", line);
-				break;
-			}
-		}
-
-		fclose(fpi);
-		fclose(fpo);
-	}
-	else
-	{
-		for(line = 1; ; line++)
-		{
-			sbuf.clear();
-			wsbuf.clear();
-
-			while((pb = fgets(buf, _countof(buf), fpi)) != nullptr)
-			{
-				sbuf.append(buf);
-
-				if(!sbuf.empty() && sbuf.back() == '\n')
+			case out_euc_jis_2004:
+				wsbuf = eucjp_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
 				{
-					break;
+					sbuf = wstring_to_eucjis2004_string(wsbuf);
+					if (sbuf.size() > 0)
+					{
+						fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+					}
+					else
+					{
+						ret = FALSE;
+					}
 				}
-			}
-
-			if(pb == nullptr)
-			{
-				break;
-			}
-
-			if(inenc == in_utf8 && sbuf.size() >= 3 && sbuf.substr(0, 3) == "\xEF\xBB\xBF")
-			{
-				sbuf.erase(0, 3);
-			}
-
-			if(sbuf.size() >= 2 && sbuf.substr(sbuf.size() - 2) == "\r\n")
-			{
-				sbuf.erase(sbuf.size() - 2);
-				sbuf.push_back('\n');
-			}
-
-			ret = TRUE;
-
-			switch(inenc)
-			{
-			case in_euc:
-				switch(outenc)
+				else
 				{
-				case out_euc:
-					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
-					break;
-				case in_utf8:
-					wsbuf = eucjis2004_string_to_wstring(sbuf);
-					if(wsbuf.size() > 0)
-					{
-						sbuf = wstring_to_utf8_string(wsbuf);
-						if(sbuf.size() > 0)
-						{
-							fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
-						}
-						else
-						{
-							ret = FALSE;
-						}
-					}
-					else
-					{
-						ret = FALSE;
-					}
-					break;
-				case out_utf16:
-					wsbuf = eucjis2004_string_to_wstring(sbuf);
-					if(wsbuf.size() > 0)
-					{
-						fwprintf(fpo, L"%s", wsbuf.c_str());
-					}
-					else
-					{
-						ret = FALSE;
-					}
-					break;
-				default:
-					break;
+					ret = FALSE;
 				}
 				break;
-
-			case in_utf8:
-				switch(outenc)
+			case out_euc_jp:
+				fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
+				break;
+			case out_utf8:
+				wsbuf = eucjp_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
 				{
-				case out_euc:
-					wsbuf = utf8_string_to_wstring(sbuf);
-					if(wsbuf.size() > 0)
+					sbuf = wstring_to_utf8_string(wsbuf);
+					if (sbuf.size() > 0)
 					{
-						sbuf = wstring_to_eucjis2004_string(wsbuf);
-						if(sbuf.size() > 0)
-						{
-							fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
-						}
-						else
-						{
-							ret = FALSE;
-						}
+						fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
 					}
 					else
 					{
 						ret = FALSE;
 					}
-					break;
-				case in_utf8:
-					fwrite(sbuf.c_str(), sbuf.size(), 1, fpo);
-					break;
-				case out_utf16:
-					wsbuf = utf8_string_to_wstring(sbuf);
-					if(wsbuf.size() > 0)
-					{
-						fwprintf(fpo, L"%s", wsbuf.c_str());
-					}
-					else
-					{
-						ret = FALSE;
-					}
-					break;
-				default:
-					break;
+				}
+				else
+				{
+					ret = FALSE;
 				}
 				break;
-
+			case out_utf16:
+				wsbuf = eucjp_string_to_wstring(sbuf);
+				if (wsbuf.size() > 0)
+				{
+					fwprintf(fpo, L"%s", wsbuf.c_str());
+				}
+				else
+				{
+					ret = FALSE;
+				}
+				break;
 			default:
+				ret = FALSE;
 				break;
 			}
+			break;
 
-			if(!ret)
-			{
-				fwprintf(stderr, L"error : cannot convert line %u\n", line);
-				break;
-			}
+		default:
+			break;
 		}
 
-		fclose(fpi);
-		fclose(fpo);
+		if (!ret)
+		{
+			fwprintf(stderr, L"error : cannot convert line %u\n", line);
+			break;
+		}
 	}
 
-	return 0;
+	return ret;
 }

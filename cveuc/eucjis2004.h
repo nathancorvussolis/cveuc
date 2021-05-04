@@ -56,8 +56,8 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 //                nullptrのとき戻り値はFALSEになる
 BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsize);
 
-std::string wstring_to_eucjis2004_string(const std::wstring &s);
-std::wstring eucjis2004_string_to_wstring(const std::string &s);
+void AddNullWideChar(size_t *srcsize, size_t si, LPWSTR dst, size_t *dstsize, size_t di);
+void AddNullMultiByte(size_t *srcsize, size_t si, LPSTR dst, size_t *dstsize, size_t di);
 
-#define WCTOEUC(w) wstring_to_eucjis2004_string(w).c_str()
-#define EUCTOWC(u) eucjis2004_string_to_wstring(u).c_str()
+std::wstring eucjis2004_string_to_wstring(const std::string &s);
+std::string wstring_to_eucjis2004_string(const std::wstring &s);

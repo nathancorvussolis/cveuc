@@ -44,7 +44,7 @@ size_t UcpToWideChar(UCSCHAR ucp, PWCHAR first, PWCHAR second)
 		*second = L'\0';
 		ret = 1;
 	}
-	else if (ucp <= SURROGATEPAIR_UCPMAX)  	//surrogate pair
+	else if (ucp <= SURROGATEPAIR_UCPMAX)  	// surrogate pair
 	{
 		*first = (WCHAR)(SURROGATEPAIR_HIGH_MASK | ((ucp - SURROGATEPAIR_UCPMIN) >> SURROGATEPAIR_SEPBIT));
 		*second = (WCHAR)(SURROGATEPAIR_LOW_MASK | ((ucp - SURROGATEPAIR_UCPMIN) & SURROGATEPAIR_SEPMASK));
@@ -76,7 +76,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 	*ucp1 = 0;
 	*ucp2 = 0;
 
-	if (as <= src[0] && src[0] <= ae)	//ASCII
+	if (as <= src[0] && src[0] <= ae)	// ASCII
 	{
 		*ucp1 = src[0];
 		*ucp2 = 0;
@@ -86,7 +86,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 	{
 		switch (src[0])
 		{
-		case ss3:	// JIS X 0213 Plane 2
+		case ss3:	// JIS X 0213 第二面
 			if (srcsize < 3)
 			{
 				break;
@@ -117,7 +117,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 			}
 			break;
 
-		case ss2:	//JIS X 0201 halfwidth katakana
+		case ss2:	// JIS X 0201 片仮名
 			if (srcsize < 2)
 			{
 				break;
@@ -138,7 +138,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 			}
 			break;
 
-		default:	// JIS X 0213 Plane 1
+		default:	// JIS X 0213 第一面
 			if (srcsize < 2)
 			{
 				break;
@@ -161,7 +161,7 @@ size_t EucJis2004ToUcp(LPCSTR src, size_t srcsize, PUCSCHAR ucp1, PUCSCHAR ucp2)
 			{
 				USHORT euc = ((USHORT)ej[0] << 8) | (USHORT)ej[1] | 0x8080;
 
-				//結合文字
+				// 結合文字
 				for (int i = 0; i < CMBCHARNUM; i++)
 				{
 					if (euccmb[i].euc == euc)
@@ -260,7 +260,7 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 			}
 		}
 
-		if (*dstsize <= di + utf16num[0] + utf16num[1])	//limit
+		if (*dstsize <= di + utf16num[0] + utf16num[1])	// limit
 		{
 			AddNullWideChar(srcsize, si, dst, dstsize, di);
 			return FALSE;
@@ -285,7 +285,7 @@ BOOL EucJis2004ToWideChar(LPCSTR src, size_t *srcsize, LPWSTR dst, size_t *dstsi
 
 // 終端NULLを付加
 
-void AddNullEucJis2004(size_t *srcsize, size_t si, LPSTR dst, size_t *dstsize, size_t di)
+void AddNullMultiByte(size_t *srcsize, size_t si, LPSTR dst, size_t *dstsize, size_t di)
 {
 	if (srcsize != nullptr)
 	{
@@ -339,11 +339,11 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 			break;
 		}
 
-		if (*(src + si) <= L'\x7F')	//ASCII
+		if (*(src + si) <= L'\x7F')	// ASCII
 		{
-			if (*dstsize <= di + 1)	//limit
+			if (*dstsize <= di + 1)	// limit
 			{
-				AddNullEucJis2004(srcsize, si, dst, dstsize, di);
+				AddNullMultiByte(srcsize, si, dst, dstsize, di);
 				return FALSE;
 			}
 			if (dst != nullptr)
@@ -378,39 +378,75 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 				ucp = first;
 			}
 
-			//結合文字
-			for (int i = 0; i < CMBCHARNUM; i++)
+			// 互換性
+			if (!exist)
 			{
-				if (first == euccmb[i].ucp[0] && second == euccmb[i].ucp[1])
+				for (int i = 0; i < CMPEUCNUM; i++)
 				{
-					if (*dstsize <= di + 2)	//limit
+					if (ucp == euccmp[i].ucp)
 					{
-						AddNullEucJis2004(srcsize, si, dst, dstsize, di);
-						return FALSE;
+						if (*dstsize <= di + 2)	// limit
+						{
+							AddNullMultiByte(srcsize, si, dst, dstsize, di);
+							return FALSE;
+						}
+						if (dst != nullptr)
+						{
+							*(dst + di) = (CHAR)(euccmp[i].euc >> 8);
+							*(dst + di + 1) = (CHAR)(euccmp[i].euc & 0xFF);
+						}
+						di += 2;
+						if (ucp != first)	// surrogate pair
+						{
+							si++;
+						}
+						exist = TRUE;
+						break;
 					}
-					if (dst != nullptr)
-					{
-						*(dst + di) = euccmb[i].euc >> 8;
-						*(dst + di + 1) = euccmb[i].euc & 0xFF;
-					}
-					di += 2;
-					si++;
-					exist = TRUE;
-					break;
 				}
 			}
 
+			// 結合文字
+			if (!exist)
+			{
+				for (int i = 0; i < CMBCHARNUM; i++)
+				{
+					if (first == euccmb[i].ucp[0] && second == euccmb[i].ucp[1])
+					{
+						if (*dstsize <= di + 2)	// limit
+						{
+							AddNullMultiByte(srcsize, si, dst, dstsize, di);
+							return FALSE;
+						}
+						if (dst != nullptr)
+						{
+							*(dst + di) = euccmb[i].euc >> 8;
+							*(dst + di + 1) = euccmb[i].euc & 0xFF;
+						}
+						di += 2;
+						if (ucp != first)	// surrogate pair, unused actually
+						{
+							si++;
+						}
+						si++;
+						exist = TRUE;
+						break;
+					}
+				}
+			}
+
+			// JIS X 0213 第一面
 			if (!exist)
 			{
 				for (int i = 0; i < ROWNUM; i++)
 				{
 					for (int j = 0; j < CELLNUM; j++)
 					{
-						if (ucp == euc1[i][j])		// JIS X 0213 Plane 1
+						if (ucp == euc1[i][j])
 						{
-							if (*dstsize <= di + 2)	//limit
+							if (*dstsize <= di + 2)	// limit
 							{
-								AddNullEucJis2004(srcsize, si, dst, dstsize, di);
+								AddNullMultiByte(srcsize, si, dst, dstsize, di);
 								return FALSE;
 							}
 							if (dst != nullptr)
@@ -419,29 +455,7 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 								*(dst + di + 1) = (CHAR)((UCHAR)(ejs + j) + (UCHAR)ejd);
 							}
 							di += 2;
-							if (ucp != first)	//surrogate pair
-							{
-								si++;
-							}
-							exist = TRUE;
-							break;
-						}
-						else if (euc2i[i] != 0 && euc2i[i] <= ROW2NUM &&
-							ucp == euc2[euc2i[i] - 1][j])	// JIS X 0213 Plane 2
-						{
-							if (*dstsize <= di + 3)	//limit
-							{
-								AddNullEucJis2004(srcsize, si, dst, dstsize, di);
-								return FALSE;
-							}
-							if (dst != nullptr)
-							{
-								*(dst + di) = ss3;
-								*(dst + di + 1) = (CHAR)((UCHAR)(ejs + i) + (UCHAR)ejd);
-								*(dst + di + 2) = (CHAR)((UCHAR)(ejs + j) + (UCHAR)ejd);
-							}
-							di += 3;
-							if (ucp != first)	//surrogate pair
+							if (ucp != first)	// surrogate pair
 							{
 								si++;
 							}
@@ -457,15 +471,54 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 				}
 			}
 
+			// JIS X 0213 第二面
+			if (!exist)
+			{
+				for (int i = 0; i < ROWNUM; i++)
+				{
+					for (int j = 0; j < CELLNUM; j++)
+					{
+						if (euc2i[i] != 0 && euc2i[i] <= ROW2NUM &&
+							ucp == euc2[euc2i[i] - 1][j])
+						{
+							if (*dstsize <= di + 3)	// limit
+							{
+								AddNullMultiByte(srcsize, si, dst, dstsize, di);
+								return FALSE;
+							}
+							if (dst != nullptr)
+							{
+								*(dst + di) = ss3;
+								*(dst + di + 1) = (CHAR)((UCHAR)(ejs + i) + (UCHAR)ejd);
+								*(dst + di + 2) = (CHAR)((UCHAR)(ejs + j) + (UCHAR)ejd);
+							}
+							di += 3;
+							if (ucp != first)	// surrogate pair
+							{
+								si++;
+							}
+							exist = TRUE;
+							break;
+						}
+					}
+
+					if (exist)
+					{
+						break;
+					}
+				}
+			}
+
+			// JIS X 0201 片仮名
 			if (!exist)
 			{
 				for (int i = 0; i < ANKNUM; i++)
 				{
-					if (ucp == eucK[i])	//JIS X 0201 halfwidth katakana
+					if (ucp == eucK[i])
 					{
-						if (*dstsize <= di + 2)	//limit
+						if (*dstsize <= di + 2)	// limit
 						{
-							AddNullEucJis2004(srcsize, si, dst, dstsize, di);
+							AddNullMultiByte(srcsize, si, dst, dstsize, di);
 							return FALSE;
 						}
 						if (dst != nullptr)
@@ -482,37 +535,14 @@ BOOL WideCharToEucJis2004(LPCWSTR src, size_t *srcsize, LPSTR dst, size_t *dstsi
 
 			if (!exist)
 			{
-				AddNullEucJis2004(srcsize, si, dst, dstsize, di);
+				AddNullMultiByte(srcsize, si, dst, dstsize, di);
 				return FALSE;
 			}
 		}
 	}
 
-	AddNullEucJis2004(srcsize, si, dst, dstsize, di);
+	AddNullMultiByte(srcsize, si, dst, dstsize, di);
 	return TRUE;
-}
-
-std::string wstring_to_eucjis2004_string(const std::wstring &s)
-{
-	std::string ret;
-	size_t len;
-
-	BOOL b = WideCharToEucJis2004(s.c_str(), nullptr, nullptr, &len);
-	if (b && len > 0)
-	{
-		try
-		{
-			LPSTR euc = new CHAR[len];
-			WideCharToEucJis2004(s.c_str(), nullptr, euc, &len);
-			ret = euc;
-			delete[] euc;
-		}
-		catch (...)
-		{
-		}
-	}
-
-	return ret;
 }
 
 std::wstring eucjis2004_string_to_wstring(const std::string &s)
@@ -526,9 +556,36 @@ std::wstring eucjis2004_string_to_wstring(const std::string &s)
 		try
 		{
 			LPWSTR wcs = new WCHAR[len];
-			EucJis2004ToWideChar(s.c_str(), nullptr, wcs, &len);
-			ret = wcs;
+			if (EucJis2004ToWideChar(s.c_str(), nullptr, wcs, &len))
+			{
+				ret = wcs;
+			}
 			delete[] wcs;
+		}
+		catch (...)
+		{
+		}
+	}
+
+	return ret;
+}
+
+std::string wstring_to_eucjis2004_string(const std::wstring &s)
+{
+	std::string ret;
+	size_t len;
+
+	BOOL b = WideCharToEucJis2004(s.c_str(), nullptr, nullptr, &len);
+	if (b && len > 0)
+	{
+		try
+		{
+			LPSTR euc = new CHAR[len];
+			if (WideCharToEucJis2004(s.c_str(), nullptr, euc, &len))
+			{
+				ret = euc;
+			}
+			delete[] euc;
 		}
 		catch (...)
 		{
