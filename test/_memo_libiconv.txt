@@ -1,6 +1,6 @@
 
-# https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
-# Ubuntu-20.04 WSL2
+# https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
+# Ubuntu 22.04.1 LTS WSL2
 # src/iconv_no_i18n.exe
 
 $ ./configure --enable-extra-encodings --disable-shared --enable-static --host=i686-w64-mingw32 CC=i686-w64-mingw32-gcc
