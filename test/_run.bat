@@ -7,7 +7,7 @@ pushd %OUTDIR%
 del /f /q *
 popd
 
-set CVEUC="..\Release\cveuc.exe"
+set CVEUC="..\Win32\Release\cveuc.exe"
 
 
 
