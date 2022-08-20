@@ -58,7 +58,7 @@ int wmain(int argc, wchar_t *argv[])
 	LPCWSTR rmode = modeRT;
 	LPCWSTR wmode = modeWB;
 
-	setlocale(LC_ALL, "");
+	_wsetlocale(LC_ALL, L"");
 
 	if (argc < 5)
 	{
