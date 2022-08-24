@@ -2,6 +2,8 @@
 pushd %~dp0
 setlocal
 
+set TXTDIR=txt
+
 echo.
 echo ======== x86 ƒeƒXƒg ========
 call _run_sub_x86.bat
