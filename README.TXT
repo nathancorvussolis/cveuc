@@ -76,7 +76,7 @@ EUC-JIS-2004、EUC-JP、UTF-16、UTF-8 のファイルを相互に変換しま�
 
 互換性
 
-  変換テーブルは基本的に iconv 1.16 と同等としています。
+  変換テーブルは基本的に iconv 1.17 と同等としています。
 
   EUC-JP は、ASCII、JIS X 0208、JIS X 0201 片仮名、JIS X 0212 を実装する
   いわゆる IANA の EUC-JP となっています。
@@ -105,26 +105,26 @@ EUC-JIS-2004、EUC-JP、UTF-16、UTF-8 のファイルを相互に変換しま�
       nkf 2.1.5 : 0xA1EF -> U+00A5
 
     U+2014 or U+2015 -> 0xA1BD  # EM DASH  Windows: U+2015
-      iconv 1.16 : 0xA1BD -> U+2015
-      icu 69.1 : 0xA1BD -> U+2015
+      iconv 1.17 : 0xA1BD -> U+2015
+      icu 71.1 : 0xA1BD -> U+2015
 
     U+301C or U+FF5E -> 0xA1C1  # WAVE DASH Windows: U+FF5E
-      icu 69.1 : 0xA1C1 -> U+FF5E
+      icu 71.1 : 0xA1C1 -> U+FF5E
 
     U+2016 or U+2225 -> 0xA1C2  # DOUBLE VERTICAL LINE  Windows: U+2225
-      icu 69.1 : 0xA1C2 -> U+2225
+      icu 71.1 : 0xA1C2 -> U+2225
 
     U+2212 or U+FF0D -> 0xA1DD  # MINUS SIGN  Windows: U+FF0D
-      icu 69.1 : 0xA1DD -> U+FF0D
+      icu 71.1 : 0xA1DD -> U+FF0D
 
     U+00A2 or U+FFE0 -> 0xA1F1  # CENT SIGN  Windows: U+FFE0
-      icu 69.1 : 0xA1F1 -> U+FFE0
+      icu 71.1 : 0xA1F1 -> U+FFE0
 
     U+00A3 or U+FFE1 -> 0xA1F2  # POUND SIGN  Windows: U+FFE1
-      icu 69.1 : 0xA1F2 -> U+FFE1
+      icu 71.1 : 0xA1F2 -> U+FFE1
 
     U+00AC or U+FFE2 -> 0xA2CC  # NOT SIGN  [1983]  Windows: U+FFE2
-      icu 69.1 : 0xA2CC -> U+FFE2
+      icu 71.1 : 0xA2CC -> U+FFE2
 
 
 -------------------------------------------------------------------------------
