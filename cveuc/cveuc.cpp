@@ -67,54 +67,64 @@ int wmain(int argc, wchar_t *argv[])
 	}
 
 	LPCWSTR inopt = argv[1];
-	if (wcscmp(inopt, L"-e") == 0)
+	if (inopt[0] == L'-' || inopt[0] == L'/')
 	{
-		inenc = in_euc_jis_2004;
-		rmode = modeRT;
+		switch (inopt[1])
+		{
+		case L'e':
+			inenc = in_euc_jis_2004;
+			rmode = modeRT;
+			break;
+		case L'j':
+			inenc = in_euc_jp;
+			rmode = modeRT;
+			break;
+		case L'u':
+			inenc = in_utf8;
+			rmode = modeRccsUTF8;
+			break;
+		case L'w':
+			inenc = in_utf16;
+			rmode = modeRccsUTF16LE;
+			break;
+		default:
+			break;
+		}
 	}
-	else if (wcscmp(inopt, L"-j") == 0)
-	{
-		inenc = in_euc_jp;
-		rmode = modeRT;
-	}
-	else if (wcscmp(inopt, L"-u") == 0)
-	{
-		inenc = in_utf8;
-		rmode = modeRccsUTF8;
-	}
-	else if (wcscmp(inopt, L"-w") == 0)
-	{
-		inenc = in_utf16;
-		rmode = modeRccsUTF16LE;
-	}
-	else
+
+	if (inenc == in_enc_none)
 	{
 		print_usage();
 		return -1;
 	}
 
 	LPCWSTR outopt = argv[2];
-	if (wcscmp(outopt, L"-E") == 0)
+	if (outopt[0] == L'-' || outopt[0] == L'/')
 	{
-		outenc = out_euc_jis_2004;
-		wmode = modeWB;
+		switch (outopt[1])
+		{
+		case L'E':
+			outenc = out_euc_jis_2004;
+			wmode = modeWB;
+			break;
+		case L'J':
+			outenc = out_euc_jp;
+			wmode = modeWB;
+			break;
+		case L'U':
+			outenc = out_utf8;
+			wmode = modeWB;
+			break;
+		case L'W':
+			outenc = out_utf16;
+			wmode = modeWccsUTF16LE;
+			break;
+		default:
+			break;
+		}
 	}
-	else if (wcscmp(outopt, L"-J") == 0)
-	{
-		outenc = out_euc_jp;
-		wmode = modeWB;
-	}
-	else if (wcscmp(outopt, L"-U") == 0)
-	{
-		outenc = out_utf8;
-		wmode = modeWB;
-	}
-	else if (wcscmp(outopt, L"-W") == 0)
-	{
-		outenc = out_utf16;
-		wmode = modeWccsUTF16LE;
-	}
-	else
+
+	if (outenc == out_enc_none)
 	{
 		print_usage();
 		return -1;
