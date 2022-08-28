@@ -3,7 +3,7 @@
 #include "eucjp.h"
 #include "utf8.h"
 
-#define VERSION			L"2.5.0"
+#define VERSION			L"2.5.5"
 
 #define BUFSIZE			0x200
 
