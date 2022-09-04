@@ -1,0 +1,34 @@
+http://x0213.org/codetable/
+
+Shift_JIS-2004とUnicodeの対応表
+http://x0213.org/codetable/sjis-0213-2004-std.txt
+
+Shift_JIS-2004とUnicodeの対応表 文字付き版: Shift_JIS-2004
+http://x0213.org/codetable/sjis-0213-2004-with-char.txt
+
+Shift_JIS-2004とUnicodeの対応表 文字付き版: UTF-8
+http://x0213.org/codetable/sjis-0213-2004-with-char-u8.txt
+
+EUC-JIS-2004とUnicodeの対応表
+http://x0213.org/codetable/euc-jis-2004-std.txt
+
+EUC-JIS-2004とUnicodeの対応表 文字付き版: EUC-JIS-2004
+http://x0213.org/codetable/euc-jis-2004-with-char.txt
+
+EUC-JIS-2004とUnicodeの対応表 文字付き版: UTF-8
+http://x0213.org/codetable/euc-jis-2004-with-char-u8.txt
+
+ISO-2022-JP-2004とUnicodeの対応表
+http://x0213.org/codetable/iso-2022-jp-2004-std.txt
+
+JIS X 0213:2004 漢字7ビット符号とUnicodeの対応表
+http://x0213.org/codetable/jisx0213-2004-std.txt
+
+JIS X 0213:2004 漢字8ビット符号とUnicodeの対応表
+http://x0213.org/codetable/jisx0213-2004-8bit-std.txt
+
+ISO/IEC 646国際基準版 (ASCII)とJIS X 0213:2004 漢字8ビット符号との対応表
+http://x0213.org/codetable/iso646irv-jisx0213-8bit.txt
+
+JIS X 0201ラテン文字とJIS X 0213:2004 漢字8ビット符号との対応表
+http://x0213.org/codetable/jisx0201-7bit-jisx0213-8bit.txt
